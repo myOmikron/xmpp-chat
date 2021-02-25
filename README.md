@@ -33,19 +33,19 @@ SHARED_SECRET = "change_me"
 
 # Your dictionary with all your parameters
 param_dict = {
-    "meeting_id": "12345678901234567890-123456789"
+    "room_jid": "12345678901234567890-123456789@domain.tld"
 }
 # Encode as json
 json_encoded = json.dumps(param_dict)
 
 # Add API Call
-call = "endChatForMeeting" + json_encoded
+call = "endChatForRoom" + json_encoded
 
 # Hash with shared secret and current unix epoch
 param_dict["checksum"] = hashlib.sha512((call + SHARED_SECRET + str(int(datetime.now().timestamp()))).encode("utf-8")).hexdigest()
 
 # Make request
-requests.post("https://example.com/api/endChatForMeeting", data=json.dumps(param_dict))
+requests.post("https://example.com/api/endChatForRoom", data=json.dumps(param_dict))
 ```
 
 ### sendChatMessage/\<jid\>
@@ -63,7 +63,7 @@ message          | Yes      | str   | Unformatted message
 
 Parameter        | Required | Type  | Description
 :---:            | :---:    | :---: | :---:
-jid_room         | Yes      | str   | jid of jabber room
+room_jid         | Yes      | str   | jid of jabber room
 callback_uri     | No       | str   | Only required when callbacks should be enabled. Specifies the uri to which all messages from the bbb chat should be forwarded to.
 callback_secret  | No       | str   | Only required when callbacks should be enabled. Specifies the shared secret to use for a specific callback uri.
 
@@ -78,4 +78,4 @@ deleted in the db.
 
 Parameter        | Required | Type  | Description
 :---:            | :---:    | :---: | :---:
-jid_room         | Yes      | str   | jid of jabber room
+room_jid         | Yes      | str   | jid of jabber room
