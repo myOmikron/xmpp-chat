@@ -14,10 +14,12 @@ def validate_request(args, method):
         return {"success": False, "message": "No checksum was given."}
     ret = {"success": False, "message": "Checksum was incorrect."}
     current_timestamp = int(datetime.now().timestamp())
+    checksum = args["checksum"]
+    del args["checksum"]
     for i in range(settings.SHARED_SECRET_TIME_DELTA):
         tmp_timestamp = current_timestamp - i
         call = method + json.dumps(args)
-        if hashlib.sha512((call + settings.SHARED_SECRET + str(tmp_timestamp)).encode("utf-8")).hexdigest() == args["checksum"]:
+        if hashlib.sha512((call + settings.SHARED_SECRET + str(tmp_timestamp)).encode("utf-8")).hexdigest() == checksum:
             ret["success"] = True
             ret["message"] = "Checksum is correct"
             break
