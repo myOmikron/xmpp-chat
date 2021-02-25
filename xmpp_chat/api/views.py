@@ -65,11 +65,11 @@ class StartChatForRoom(TemplateView):
         validated = validate_request(args, "startChatForRoom")
         if not validated["success"]:
             return JsonResponse(validated, status=400, reason=validated["message"])
-        if "jid_room" not in args:
+        if "room_jid" not in args:
             return JsonResponse(
-                {"success": False, "message": "Parameter jid_room is mandatory but missing."},
+                {"success": False, "message": "Parameter room_jid is mandatory but missing."},
                 status=403,
-                reason="Parameter jid_room is mandatory but missing."
+                reason="Parameter room_jid is mandatory but missing."
             )
         if "callback_uri" not in args:
             if "callback_secret" in args:
