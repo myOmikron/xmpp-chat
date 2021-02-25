@@ -5,6 +5,7 @@ from datetime import datetime
 from django.http import JsonResponse
 from django.views.generic import TemplateView
 
+from api.models import RoomModel
 from xmpp_chat import settings
 
 
@@ -91,6 +92,18 @@ class StartChatForRoom(TemplateView):
                     status=403,
                     reason="Parameter callback_secret is mandatory when specifying callback_uri, but missing"
                 )
+        room, created = RoomModel.objects.get_or_create(
+            room_jid=args["room_jid"],
+            callback_uri="" if "callback_uri" not in args else args["callback_uri"],
+            callback_secret="" if "callback_secret" not in args else args["callback_secret"]
+        )
+        if not created:
+            return JsonResponse(
+                {"success": False, "message": "Room was already registered."},
+                status=304,
+                reason="Room was already registered."
+            )
+        room.save()
         # TODO Start listener
 
 
@@ -108,10 +121,19 @@ class EndChatForRoom(TemplateView):
         validated = validate_request(args, "endChatForRoom")
         if not validated["success"]:
             return JsonResponse(validated, status=400, reason=validated["message"])
-        if "jid_room" not in args:
+        if "room_jid" not in args:
             return JsonResponse(
-                {"success": False, "message": "Parameter jid_room is mandatory but missing."},
+                {"success": False, "message": "Parameter room_jid is mandatory but missing."},
                 status=403,
-                reason="Parameter jid_room is mandatory but missing."
+                reason="Parameter room_jid is mandatory but missing."
             )
-        # TODO Delete listener
+        try:
+            room = RoomModel.objects.get(room_jid=args["room_jid"])
+            room.delete()
+            # TODO Delete listener
+        except RoomModel.DoesNotExist:
+            return JsonResponse(
+                {"success": False, "message": "Room was not found"},
+                status=404,
+                reason="Room was not found"
+            )
