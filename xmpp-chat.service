@@ -5,7 +5,7 @@ Description=XMPP-Chat Sync service
 WantedBy=multi-user.target
 
 [Service]
-ExecStart=/home/bbb-chat/bbb-chat/venv/bin/python3 manage.py runserver 127.0.0.1:8003
+ExecStart=/home/xmpp-chat/xmpp-chat/venv/bin/python3 manage.py runserver 127.0.0.1:8003
 User=xmpp-chat
 WorkingDirectory=/home/xmpp-chat/xmpp-chat/xmpp_chat/
 Restart=always
