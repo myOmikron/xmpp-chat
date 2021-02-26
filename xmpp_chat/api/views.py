@@ -5,7 +5,6 @@ from datetime import datetime
 from django.http import JsonResponse
 from django.views.generic import TemplateView
 
-from api.models import RoomModel
 from xmpp_chat import settings
 from xmpp_handler import XmppHandler
 from xmpp_handler import State
@@ -115,7 +114,7 @@ class StartChatForRoom(TemplateView):
                 reason="Room was already registered."
             )
         else:
-            State.add(
+            State.instance.add(
                 room_jid=args["room_jid"],
                 callback_uri="" if "callback_uri" not in args else args["callback_uri"],
                 callback_secret="" if "callback_secret" not in args else args["callback_secret"]
