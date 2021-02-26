@@ -1,12 +1,15 @@
 import asyncio
 import logging
 import queue
+from functools import partial
 from threading import Thread
 
 import aioxmpp
 from django.conf import settings
 
+
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class XmppHandler:
@@ -39,12 +42,33 @@ class XmppHandler:
 
     def add_room(self, jid: str):
         room, future = self.muc.join(aioxmpp.JID.fromstr(jid), settings.XMPP_USER_NICK)
-        room: aioxmpp.muc.Room
         room.future = future
+
+        def callback(f):
+            room.on_message.connect(partial(self._on_message, jid))
+
+        future.add_done_callback(callback)
         self.rooms[jid] = room
 
     def remove_room(self, jid):
         return NotImplemented
+
+    def _on_message(self, room_jid, message, member, source, **kwargs):
+        if member.nick == settings.XMPP_USER_NICK:
+            return
+        else:
+            user = member.nick
+            text = message.body.any()
+
+            try:  # TODO Experimental
+                timestamp = message.xep0203_delay[0].stamp
+                logger.debug("Skipping old message")
+                return
+            except:
+                pass
+
+            # TODO api call
+            print(text)
 
     def send_message(self, room_jid: str, msg: str):
         self.msg_queue.put((room_jid, msg))
