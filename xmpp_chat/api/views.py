@@ -18,7 +18,7 @@ def validate_request(args, method):
     current_timestamp = int(datetime.now().timestamp())
     checksum = args["checksum"]
     del args["checksum"]
-    for i in range(settings.SHARED_SECRET_TIME_DELTA):
+    for i in range(0-settings.SHARED_SECRET_TIME_DELTA, settings.SHARED_SECRET_TIME_DELTA):
         tmp_timestamp = current_timestamp - i
         call = method + json.dumps(args)
         if hashlib.sha512((call + settings.SHARED_SECRET + str(tmp_timestamp)).encode("utf-8")).hexdigest() == checksum:
