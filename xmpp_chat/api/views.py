@@ -7,6 +7,8 @@ from django.views.generic import TemplateView
 
 from api.models import RoomModel
 from xmpp_chat import settings
+from xmpp_handler import XmppHandler
+from xmpp_handler import State
 
 
 def validate_request(args, method):
@@ -51,7 +53,18 @@ class SendChatMessage(TemplateView):
                 status=400,
                 reason="Parameter message is mandatory but missing."
             )
-        # TODO Send message via bridge
+
+        if jid in XmppHandler.instance.rooms:
+            user = args["user_name"]
+            XmppHandler.instance.send_message(jid, f"{user} wrote:\n"
+                                                   + args["message"])
+            return JsonResponse({"success": True, "message": "Send message successfully."})
+        else:
+            return JsonResponse(
+                {"success": False, "message": "Unknown room, don't forget to start it first."},
+                status=404,
+                reason="Unknown room, don't forget to start it first."
+            )
 
 
 class StartChatForRoom(TemplateView):
@@ -94,19 +107,20 @@ class StartChatForRoom(TemplateView):
                     status=403,
                     reason="Parameter callback_secret is mandatory when specifying callback_uri, but missing"
                 )
-        room, created = RoomModel.objects.get_or_create(
-            room_jid=args["room_jid"],
-            callback_uri="" if "callback_uri" not in args else args["callback_uri"],
-            callback_secret="" if "callback_secret" not in args else args["callback_secret"]
-        )
-        if not created:
+
+        if State.instance.get(args["room_jid"]):
             return JsonResponse(
                 {"success": False, "message": "Room was already registered."},
                 status=304,
                 reason="Room was already registered."
             )
-        room.save()
-        # TODO Start listener
+        else:
+            State.add(
+                room_jid=args["room_jid"],
+                callback_uri="" if "callback_uri" not in args else args["callback_uri"],
+                callback_secret="" if "callback_secret" not in args else args["callback_secret"]
+            )
+            return JsonResponse({"success": True, "message": "Added room successfully."})
 
 
 class EndChatForRoom(TemplateView):
@@ -129,11 +143,11 @@ class EndChatForRoom(TemplateView):
                 status=403,
                 reason="Parameter room_jid is mandatory but missing."
             )
-        try:
-            room = RoomModel.objects.get(room_jid=args["room_jid"])
-            room.delete()
-            # TODO Delete listener
-        except RoomModel.DoesNotExist:
+
+        if State.instance.get(args["room_jid"]):
+            State.instance.remove(args["room_jid"])
+            return JsonResponse({"success": True, "message": "Removed room successfully."})
+        else:
             return JsonResponse(
                 {"success": False, "message": "Room was not found"},
                 status=404,

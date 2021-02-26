@@ -8,14 +8,10 @@ from django.conf import settings
 
 logging.basicConfig(level=logging.INFO)
 
-muc = None
-
-rooms = {}
-
 
 class XmppHandler:
 
-    instance = None
+    instance: "XmppHandler" = None
 
     thread: Thread
     _loop: asyncio.AbstractEventLoop
@@ -46,6 +42,9 @@ class XmppHandler:
         room: aioxmpp.muc.Room
         room.future = future
         self.rooms[jid] = room
+
+    def remove_room(self, jid):
+        return NotImplemented
 
     def send_message(self, room_jid: str, msg: str):
         self.msg_queue.put((room_jid, msg))
