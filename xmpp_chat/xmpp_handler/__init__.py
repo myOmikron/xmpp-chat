@@ -1,10 +1,7 @@
 import asyncio
-import hashlib
 import json
-import os
 import time
 import logging
-from datetime import datetime
 from queue import Queue
 from threading import Thread
 
@@ -12,6 +9,7 @@ import requests
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import MiddlewareNotUsed, AppRegistryNotReady
+from rc_protocol import get_checksum
 
 from xmpp_handler.xmpp import XmppHandler
 from xmpp_handler.state import State
@@ -29,7 +27,7 @@ class XmppStartupMiddleware:
         XmppHandler.instance.on_message = on_message
         XmppHandler.instance.start_in_thread()
 
-        threads = [RequestThread() for i in range(1)]
+        threads = [RequestThread() for _ in range(1)]
         for thread in threads:
             thread.start()
 
@@ -68,19 +66,13 @@ def on_message(room_jid, message, member, source, **kwargs):
             return
 
         params = {
+            "char_id": room.callback_id,
             "user_name": user,
             "message": text
         }
+        params["checksum"] = get_checksum(params, room.callback_secret, "sendMessage")
 
-        # TODO update this to new api and add rcp
-        params["checksum"] = hashlib.sha512((
-                "sendChatMessage"
-                + json.dumps(params)
-                + room.callback_secret
-                + str(int(datetime.now().timestamp()))
-        ).encode("utf-8")).hexdigest()
-
-        RequestThread.queue.put((room.callback_uri, json.dumps(params)))
+        RequestThread.queue.put((f"{room.callback_uri}/sendMessage", json.dumps(params)))
 
 
 class RequestThread(Thread):

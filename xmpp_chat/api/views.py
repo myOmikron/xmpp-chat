@@ -4,27 +4,11 @@ from datetime import datetime
 
 from django.http import JsonResponse
 from django.views.generic import TemplateView
+from rc_protocol import validate_checksum
 
 from xmpp_chat import settings
 from xmpp_handler import XmppHandler
 from xmpp_handler import State
-
-
-def validate_request(args, method):
-    if "checksum" not in args:
-        return {"success": False, "message": "No checksum was given."}
-    ret = {"success": False, "message": "Checksum was incorrect."}
-    current_timestamp = int(datetime.now().timestamp())
-    checksum = args["checksum"]
-    del args["checksum"]
-    for i in range(0-settings.SHARED_SECRET_TIME_DELTA, settings.SHARED_SECRET_TIME_DELTA):
-        tmp_timestamp = current_timestamp - i
-        call = method + json.dumps(args)
-        if hashlib.sha512((call + settings.SHARED_SECRET + str(tmp_timestamp)).encode("utf-8")).hexdigest() == checksum:
-            ret["success"] = True
-            ret["message"] = "Checksum is correct"
-            break
-    return ret
 
 
 class RunningChats(TemplateView):
@@ -38,6 +22,7 @@ class _PostApiPoint(TemplateView):
     endpoint: str
 
     def post(self, request, *args, **kwargs):
+        # Decode json
         try:
             parameters = json.loads(request.body)
         except json.decoder.JSONDecodeError:
@@ -47,10 +32,23 @@ class _PostApiPoint(TemplateView):
                 reason="Decoding data failed"
             )
 
-        validated = validate_request(parameters, self.endpoint)
-        if not validated["success"]:
-            return JsonResponse(validated, status=400, reason=validated["message"])
+        # Validate checksum
+        try:
+            if not validate_checksum(parameters, settings.SHARED_SECRET,
+                                     self.endpoint, settings.SHARED_SECRET_TIME_DELTA):
+                return JsonResponse(
+                    {"success": False, "message": "Checksum was incorrect."},
+                    status=400,
+                    reason="Checksum was incorrect."
+                )
+        except ValueError:
+            return JsonResponse(
+                {"success": False, "message": "No checksum was given."},
+                status=400,
+                reason="No checksum was given."
+            )
 
+        # Check required parameters
         for param in self.required_parameters:
             if param not in parameters:
                 return JsonResponse(
@@ -59,6 +57,7 @@ class _PostApiPoint(TemplateView):
                     reason=f"Parameter {param} is mandatory but missing."
                 )
 
+        # Hand over to subclass
         return self._post(request, parameters, *args, **kwargs)
 
     def _post(self, request, parameters, *args, **kwargs):
