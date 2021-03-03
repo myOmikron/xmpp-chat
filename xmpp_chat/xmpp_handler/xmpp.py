@@ -39,7 +39,7 @@ class XmppHandler:
     def add_room(self, jid: str):
         self.queue.put(("JOIN", (jid,)))
 
-    def _add_room(self, jid: str):
+    async def _add_room(self, jid: str):
         room, future = self.muc.join(aioxmpp.JID.fromstr(jid), settings.XMPP_USER_NICK)
         room.future = future
 
@@ -49,8 +49,14 @@ class XmppHandler:
         future.add_done_callback(callback)
         self.rooms[jid] = room
 
-    def remove_room(self, jid):
-        return NotImplemented
+    def remove_room(self, jid: str):
+        self.queue.put(("LEAVE", (jid,)))
+
+    async def _remove_room(self, jid: str):
+        room = self.rooms[jid]
+        await room.future
+        await room.leave()
+        del self.rooms[jid]
 
     def send_message(self, room_jid: str, msg: str):
         self.queue.put(("SEND", (room_jid, msg)))
@@ -73,7 +79,9 @@ class XmppHandler:
                     if type_ == "SEND":
                         await self._send_message(*data)
                     elif type_ == "JOIN":
-                        self._add_room(*data)
+                        await self._add_room(*data)
+                    elif type_ == "LEAVE":
+                        await self._remove_room(*data)
                 except queue.Empty:
                     await asyncio.sleep(0)
 
