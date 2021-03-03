@@ -133,5 +133,5 @@ XMPP_USER_PASS = ""
 XMPP_USER_NICK = ""
 
 VERIFY_SSL_CERTS = True
-if VERIFY_SSL_CERTS:
+if not VERIFY_SSL_CERTS:
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
