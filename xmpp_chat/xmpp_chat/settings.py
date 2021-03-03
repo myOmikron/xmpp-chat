@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+import urllib3
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -129,3 +131,7 @@ SHARED_SECRET_TIME_DELTA = 5
 XMPP_USER_JID = ""
 XMPP_USER_PASS = ""
 XMPP_USER_NICK = ""
+
+VERIFY_SSL_CERTS = True
+if VERIFY_SSL_CERTS:
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

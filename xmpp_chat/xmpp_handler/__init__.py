@@ -84,7 +84,7 @@ class RequestThread(Thread):
         self.running = True
         while self.running:
             uri, data = self.queue.get()
-            requests.post(uri, data=data, headers={"user-agent": "xmpp-chat"})
+            requests.post(uri, data=data, headers={"user-agent": "xmpp-chat"}, verify=settings.VERIFY_SSL_CERTS)
 
     def stop(self):
         self.running = False
