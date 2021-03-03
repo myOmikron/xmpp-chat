@@ -64,7 +64,7 @@ def on_message(room_jid, message, member, source, **kwargs):
             pass
 
         room = State.instance.get(room_jid)
-        if not room or not room.callback_secret or not room.callback_uri:
+        if not room or not room.callback_secret or not room.callback_uri or not room.callback_id:
             return
 
         params = {
@@ -72,6 +72,7 @@ def on_message(room_jid, message, member, source, **kwargs):
             "message": text
         }
 
+        # TODO update this to new api and add rcp
         params["checksum"] = hashlib.sha512((
                 "sendChatMessage"
                 + json.dumps(params)

@@ -128,12 +128,17 @@ class StartChat(_PostApiPoint):
                 reason="Room was already registered."
             )
         else:
-            State.instance.add(
-                room_jid=parameters["chat_id"],
-                callback_uri=parameters.setdefault("callback_uri", ""),
-                callback_secret=parameters.setdefault("callback_secret", ""),
-                callback_id=parameters.setdefault("callback_id", ""),
-            )
+            if len(missing) == 0:
+                State.instance.add(
+                    room_jid=parameters["chat_id"],
+                    callback_uri=parameters["callback_uri"],
+                    callback_secret=parameters["callback_secret"],
+                    callback_id=parameters["callback_id"],
+                )
+            else:
+                State.instance.add(
+                    room_jid=parameters["chat_id"],
+                )
             return JsonResponse({"success": True, "message": "Added room successfully."})
 
 

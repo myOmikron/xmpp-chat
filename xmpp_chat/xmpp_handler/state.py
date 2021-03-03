@@ -15,13 +15,14 @@ class State:
             self.rooms[room.room_jid] = room
             XmppHandler.instance.add_room(room.room_jid)
 
-    def add(self, room_jid, callback_uri="", callback_secret=""):
+    def add(self, room_jid, callback_uri="", callback_secret="", callback_id=""):
         if room_jid in self.rooms:
             raise ValueError("Room already exists")
 
         room = RoomModel.objects.create(room_jid=room_jid,
                                         callback_uri=callback_uri,
-                                        callback_secret=callback_secret)
+                                        callback_secret=callback_secret,
+                                        callback_id=callback_id)
         self.rooms[room_jid] = room
         XmppHandler.instance.add_room(room.room_jid)
 
