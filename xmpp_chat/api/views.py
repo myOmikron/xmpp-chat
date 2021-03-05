@@ -1,6 +1,4 @@
-import hashlib
 import json
-from datetime import datetime
 
 from django.http import JsonResponse
 from django.views.generic import TemplateView
@@ -9,11 +7,16 @@ from rc_protocol import validate_checksum
 from xmpp_chat import settings
 from xmpp_handler import XmppHandler
 from xmpp_handler import State
+from api.models import RoomModel
 
 
 class RunningChats(TemplateView):
+
     def get(self, request, *args, **kwargs):
-        return NotImplemented
+        return JsonResponse({
+            "count": RoomModel.objects.count(),
+            "chat_ids": [room.room_jid for room in RoomModel.objects.all()]
+        })
 
 
 class _PostApiPoint(TemplateView):
