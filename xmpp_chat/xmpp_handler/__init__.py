@@ -66,7 +66,7 @@ def on_message(room_jid, message, member, source, **kwargs):
             return
 
         params = {
-            "char_id": room.callback_id,
+            "chat_id": room.callback_id,
             "user_name": user,
             "message": text
         }
