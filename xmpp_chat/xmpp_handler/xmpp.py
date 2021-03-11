@@ -83,7 +83,7 @@ class XmppHandler:
                     elif type_ == "LEAVE":
                         await self._remove_room(*data)
                 except queue.Empty:
-                    await asyncio.sleep(0)
+                    await asyncio.sleep(0.1)
 
     def start_in_thread(self):
         loop = asyncio.get_event_loop()
