@@ -1,6 +1,7 @@
 import asyncio
 import json
 import time
+import os
 import logging
 from queue import Queue
 from threading import Thread
@@ -72,7 +73,7 @@ def on_message(room_jid, message, member, source, **kwargs):
         }
         params["checksum"] = get_checksum(params, room.callback_secret, "sendMessage")
 
-        RequestThread.queue.put((f"{room.callback_uri}/sendMessage", json.dumps(params)))
+        RequestThread.queue.put((os.path.join(room.callback_uri, "sendMessage"), json.dumps(params)))
 
 
 class RequestThread(Thread):
